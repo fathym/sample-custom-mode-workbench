@@ -1,8 +1,8 @@
-# custom-mode-workbench
+# @fathym/sample-custom-mode-workbench
 
-Track 6 Phase 11 sample workbench demonstrating a **custom mode type** authored with `DefineModeHolon`.
+Track 6 Phase 11 sample workbench demonstrating a **custom mode type** authored with `DefineModeHolon`. Published to JSR as [`@fathym/sample-custom-mode-workbench`](https://jsr.io/@fathym/sample-custom-mode-workbench).
 
-Sibling to [`api-workbench`](https://github.com/fathym/api-workbench) (Phase 9 API-mode sample), [`ui-workbench`](https://github.com/fathym/ui-workbench) (Phase 10 WebMode + Consumes sample), and [`hello-workbench`](https://github.com/fathym-deno/hello-workbench) (v1 MCP-mode reference).
+Sibling to [`sample-api-workbench`](https://github.com/fathym/sample-api-workbench) (Phase 9 API-mode sample), [`sample-ui-workbench`](https://github.com/fathym/sample-ui-workbench) (Phase 10 WebMode + Consumes sample), and [`hello-workbench`](https://github.com/fathym-deno/hello-workbench) (v1 MCP-mode reference).
 
 ## What it demonstrates
 
@@ -25,28 +25,41 @@ Kept **intentionally minimal** — this is a primitive demonstration, not a prod
 
 A real Cron mode would parse cron expressions (or use `Deno.cron`), support multiple jobs, propagate handler errors, etc. Out of scope for a primitive demonstration.
 
-## Requires `@fathym/fai` post-Phase-11 release
+## Deploy via OpenX
 
-**⚠️ This sample doesn't run today.** `DefineModeHolon` ships on the `feature/track-6-phases-9-10-11` branch of [`fathym-deno/power-ai`](https://github.com/fathym-deno/power-ai); the `EaCModeHolon` type ships on the same-named branch of [`open-industrial-reference-architecture`](https://github.com/o-industrial/open-industrial-reference-architecture). JSR publish is pending as part of the Phase 9+10+11 cascade release. The `deno.jsonc` pins `@fathym/fai@0.0.406` as a syntactically-valid placeholder — the import in [`workbenches/cron/mode-holon.ts`](./workbenches/cron/mode-holon.ts) will fail until the pin is bumped to the post-cascade version.
+**One-time workspace admin step: register the mode holon.** Commit `CronModeHolon.Binding` (from [`mode-holon.ts`](./workbenches/cron/mode-holon.ts)) to the workspace's `eac.ModeHolons['Cron']` through the workspace commit endpoint, using a workspace JWT:
 
-## Deploy via OpenX (post cascade release)
-
-**One-time workspace admin step: register the mode holon.**
-
-```typescript
-import { CronModeHolon } from 'https://raw.githubusercontent.com/fathym/custom-mode-workbench/main/workbenches/cron/mode-holon.ts';
-
-eac.ModeHolons ??= {};
-eac.ModeHolons['Cron'] = CronModeHolon.Binding;
-// commit the EaC update
 ```
+curl -sS -X POST '{workspace-origin}/api/workspaces/commit' \
+  -H "Authorization: Bearer $OI_JWT" \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "deletes": {},
+    "eac": {
+      "EnterpriseLookup": "<workspace lookup>",
+      "ModeHolons": {
+        "Cron": {
+          "Kind": "Cron",
+          "ContractVersion": "1.0.0",
+          "Entrypoint": "fai run <Entry> --mode Cron --config /fathym-ox/mode-config.json",
+          "HealthEndpoint": "/health",
+          "BuiltIn": false,
+          "HolonRef": "https://github.com/fathym/sample-custom-mode-workbench/blob/main/workbenches/cron/mode-holon.ts",
+          "Discovery": { "RenderCategory": "workbench-cron" }
+        }
+      }
+    }
+  }'
+```
+
+Reload the workspace afterwards — `Cron` then appears in the inspector's **Modes → Add mode** list. Until it is registered, only the built-in modes (API, Web, MCP) are offered.
 
 **Then deploy the workbench:**
 
 1. Drop a **SurfaceWorkbench** onto a surface. In the inspector:
-   - **Source** tab: Repo `https://github.com/fathym/custom-mode-workbench`, Ref `main`, Entry `workbenches/cron/local.ts`
+   - **Source** tab: Repo `https://github.com/fathym/sample-custom-mode-workbench`, Ref `main`, Entry `workbenches/cron/local.ts`
    - **Hosting** tab: APISlug `cron-sample`
-   - **Modes** tab (after first deploy): enable `Cron`
+   - **Modes** tab: **Add mode** → `Cron`
 2. Deploy. Once `HostingStatus` is `Running`, tail the Container App logs:
    ```
    [cron] starting, everyMs=60000, healthPort=4970
@@ -66,7 +79,15 @@ a workbench to declare it.
 
 That's Phase 11 D.11.4 in action.
 
-## Local run (post pin bump)
+## Local run
+
+Straight from JSR, no clone needed:
+
+```
+fai run jsr:@fathym/sample-custom-mode-workbench --mode Cron
+```
+
+Or from a clone:
 
 ```
 deno task cron
@@ -78,8 +99,8 @@ Runs the Cron mode against a local `Deno.serve` on port 4970. `Ctrl+C` to stop.
 
 - **Track 6 v2 execution tracker**: [`o-industrial/oi-core-pack#61`](https://github.com/o-industrial/oi-core-pack/issues/61)
 - **Phase 11 spec** (on `fathym-dev-space`): [`.workbench/.workstreams/2026-04-06-NewNodeCapabilities/track-6-workbench-node/phase-11-custom-mode-types.md`](https://github.com/fathym-deno/fathym-dev-space/blob/feature/track-6-phases-9-10-11/.workbench/.workstreams/2026-04-06-NewNodeCapabilities/track-6-workbench-node/phase-11-custom-mode-types.md)
-- **Phase 9 API-mode sample**: [`fathym/api-workbench`](https://github.com/fathym/api-workbench)
-- **Phase 10 WebMode sample**: [`fathym/ui-workbench`](https://github.com/fathym/ui-workbench)
+- **Phase 9 API-mode sample**: [`fathym/sample-api-workbench`](https://github.com/fathym/sample-api-workbench)
+- **Phase 10 WebMode sample**: [`fathym/sample-ui-workbench`](https://github.com/fathym/sample-ui-workbench)
 - **v1 MCP-mode reference sample**: [`fathym-deno/hello-workbench`](https://github.com/fathym-deno/hello-workbench)
 
 ## License

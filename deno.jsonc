@@ -1,24 +1,34 @@
 {
-  "name": "custom-mode-workbench",
-  "version": "0.0.1",
+  "name": "@fathym/sample-custom-mode-workbench",
+  "version": "0.0.0",
+  "license": "MIT",
+  // The version task resolves a freshly published @fathym/common; skip Deno's 24h dependency-age gate.
+  "minimumDependencyAge": "0",
   "exports": {
     ".": "./workbenches/cron/local.ts"
   },
   "tasks": {
-    "cron": "fai run workbenches/cron/local.ts --mode Cron"
+    "cron": "fai run workbenches/cron/local.ts --mode Cron",
+    "build": "deno task build:fmt && deno task build:lint && deno task build:check",
+    "build:check": "deno check **/*.ts",
+    "build:fmt": "deno fmt",
+    "build:lint": "deno lint",
+    "version": "deno run -A jsr:@fathym/common@0.2.325/build/version"
   },
   "imports": {
-    // NOTE: 0.0.406 does NOT yet include `DefineModeHolon` (Phase 11 D.11.3)
-    // or the `ref-arch` `EaCModeHolon` type (Phase 11 D.11.1). Both ship on
-    // `fathym-deno/power-ai` + `open-industrial-reference-architecture`
-    // branch `feature/track-6-phases-9-10-11`; JSR publish is pending as
-    // part of the Phase 9+10+11 cascade release. This pin is kept at
-    // 0.0.406 so `deno.jsonc` stays syntactically valid; imports in
-    // workbenches/cron/mode-holon.ts will fail until the bump.
     "@fathym/fai/workbenches": "jsr:@fathym/fai@0.0.785/workbenches",
     "zod": "npm:zod@4.1.13"
   },
   "compilerOptions": {
     "strict": true
-  }
+  },
+  "fmt": {
+    "indentWidth": 2,
+    "lineWidth": 100,
+    "proseWrap": "preserve",
+    "semiColons": true,
+    "singleQuote": true,
+    "useTabs": false
+  },
+  "lock": false
 }
