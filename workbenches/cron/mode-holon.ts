@@ -29,14 +29,14 @@
  * ## How to register in a workspace
  *
  * ```typescript
- * import { CronModeHolon } from 'https://raw.githubusercontent.com/fathym-deno/custom-mode-workbench/main/workbenches/cron/mode-holon.ts';
+ * import { CronModeHolon } from 'https://raw.githubusercontent.com/fathym/sample-custom-mode-workbench/main/workbenches/cron/mode-holon.ts';
  *
  * eac.ModeHolons ??= {};
  * eac.ModeHolons['Cron'] = CronModeHolon.Binding;
  * ```
  *
  * Once registered, any workbench in that workspace can declare
- * `Modes({ Cron: CronModeHolon.Mode({ EveryMs: 60_000 }) })`.
+ * `Modes({ Cron: CronModeHolon.Mode() })`.
  *
  * ## What happens without registration
  *
@@ -53,8 +53,8 @@ import { DefineModeHolon, ModeBuilder } from '@fathym/fai/workbenches';
 import type { Bench } from '@fathym/fai/workbenches';
 
 /**
- * Cron mode input — passed at `.Mode({...})` call time; the values reach
- * `.Execute()` via `ctx.Input`.
+ * Cron mode input — read from the mode config (`--config` /
+ * `Details.Modes.Cron.Config`); the values reach `.Execute()` via `ctx.Input`.
  */
 export const CronModeInputSchema = z.object({
   EveryMs: z.number().int().positive().default(60_000).describe(
@@ -73,19 +73,18 @@ export type CronModeInput = z.infer<typeof CronModeInputSchema>;
  * - `CronModeHolon.Binding` — the `ModeHolonBinding` an admin writes to
  *   `eac.ModeHolons['Cron']`. Frozen; safe to share.
  * - `CronModeHolon.Mode` — the `ModeBuilder` factory a workbench passes
- *   to `.Modes({ Cron: CronModeHolon.Mode({ EveryMs: 5_000 }) })`.
+ *   to `.Modes({ Cron: CronModeHolon.Mode() })`.
  *   Called per-workbench so each gets its own builder.
  */
 export const CronModeHolon = DefineModeHolon(
   {
     Kind: 'Cron',
     ContractVersion: '1.0.0',
-    Entrypoint:
-      'fai run <Entry> --mode Cron --config /fathym-ox/mode-config.json',
+    Entrypoint: 'fai run <Entry> --mode Cron --config /fathym-ox/mode-config.json',
     HealthEndpoint: '/health',
     BuiltIn: false,
     HolonRef:
-      'https://github.com/fathym-deno/custom-mode-workbench/blob/main/workbenches/cron/mode-holon.ts',
+      'https://github.com/fathym/sample-custom-mode-workbench/blob/main/workbenches/cron/mode-holon.ts',
     Discovery: {
       RenderCategory: 'workbench-cron',
     },

@@ -25,13 +25,16 @@
  *
  * @module
  */
-import { Workbench } from '@fathym/fai/workbenches';
+import { Workbench, type WorkbenchBuilder } from '@fathym/fai/workbenches';
 import { CronModeHolon } from './mode-holon.ts';
 
-export default Workbench(
+// EveryMs / HealthPort come from mode config (Details.Modes.Cron.Config), defaulting to 60s / 4970.
+const workbench: WorkbenchBuilder = Workbench(
   'cron-sample',
   'Track 6 Phase 11 sample workbench demonstrating a custom Cron mode via DefineModeHolon.',
 )
   .Modes({
-    Cron: CronModeHolon.Mode({ EveryMs: 60_000, HealthPort: 4970 }),
+    Cron: CronModeHolon.Mode(),
   });
+
+export default workbench;
