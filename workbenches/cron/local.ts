@@ -34,7 +34,8 @@ const workbench: WorkbenchBuilder = Workbench(
   'Track 6 Phase 11 sample workbench demonstrating a custom Cron mode via DefineModeHolon.',
 )
   .Modes({
-    Cron: CronModeHolon.Mode(),
+    // Cron serves only `/health`, on `HealthPort` (default 4970): that is the port OpenX probes.
+    Cron: CronModeHolon.Mode().Ports(4970),
   });
 
 export default workbench;
