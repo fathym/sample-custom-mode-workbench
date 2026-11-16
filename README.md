@@ -1,6 +1,6 @@
 # @fathym/sample-custom-mode-workbench
 
-Sample workbench demonstrating a **custom mode** authored with `DefineModeHolon`: a **Webhook** mode that receives signed webhooks and hands each event to a workbench tool. Published to JSR as [`@fathym/sample-custom-mode-workbench`](https://jsr.io/@fathym/sample-custom-mode-workbench).
+Sample workbench demonstrating a **custom mode**: a **Webhook** mode that receives signed webhooks and hands each event to a workbench tool. Published to JSR as [`@fathym/sample-custom-mode-workbench`](https://jsr.io/@fathym/sample-custom-mode-workbench).
 
 Sibling to [`sample-api-workbench`](https://github.com/fathym/sample-api-workbench) (API mode), [`sample-ui-workbench`](https://github.com/fathym/sample-ui-workbench) (Web mode + Consumes), and [`hello-workbench`](https://github.com/fathym-deno/hello-workbench) (MCP mode).
 
@@ -16,8 +16,8 @@ An earlier version of this sample had a scheduled mode that logged a tick every 
 
 ## What it demonstrates
 
-1. **`DefineModeHolon`** — [`workbenches/webhook/mode-holon.ts`](./workbenches/webhook/mode-holon.ts) defines the `Webhook` mode once; `WebhookModeHolon.Mode()` hands any workbench a fresh `ModeBuilder` for it.
-2. **A workbench offering it** — [`workbenches/webhook/local.ts`](./workbenches/webhook/local.ts) declares `.Modes({ Webhook: WebhookModeHolon.Mode().Ports(4970) })` and one tool, `GitHubEvents`, that receives the events.
+1. **A mode is a function** — [`workbenches/webhook/mode-holon.ts`](./workbenches/webhook/mode-holon.ts) defines the `Webhook` mode as `WebhookMode()`, a function that returns a fresh `ModeBuilder` on every call, exactly the way fai's built-in `APIMode()`, `MCPMode()` and `WebMode()` are written.
+2. **A workbench offering it** — [`workbenches/webhook/local.ts`](./workbenches/webhook/local.ts) declares `.Modes({ Webhook: WebhookMode().Ports(4970) })` and one tool, `GitHubEvents`, that receives the events.
 3. **Signature checks** — every call to a hook that names a secret must carry `X-Hub-Signature-256`, the HMAC-SHA256 of the raw body, as GitHub sends it.
 
 There is nothing to register in the workspace first. A mode is a name the package declares: OpenX reads the package's modes when you load it, and deploys any mode it declares.

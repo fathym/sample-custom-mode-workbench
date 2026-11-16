@@ -1,6 +1,7 @@
 // deno-lint-ignore-file no-explicit-any
 /**
- * WebhookModeHolon — a **custom** mode, defined outside OpenX's built-ins (MCP, API, Web).
+ * WebhookMode — a **custom** mode, defined outside OpenX's built-ins (MCP, API, Web), and
+ * written the same way they are: a function that returns a fresh `ModeBuilder`.
  *
  * A mode is a way a workbench is served. This one serves a workbench as a webhook receiver:
  * something outside (GitHub, a payment provider, a device gateway) POSTs an event to it, the
@@ -31,7 +32,7 @@
  * @module
  */
 import { z } from 'zod';
-import { DefineModeHolon, ModeBuilder } from '@fathym/fai/workbenches';
+import { ModeBuilder } from '@fathym/fai/workbenches';
 import type { Bench, ModePort } from '@fathym/fai/workbenches';
 
 /** One hook: where its events go, and where its secret is. */
@@ -192,59 +193,49 @@ export function createWebhookHandler(
 }
 
 /**
- * The custom mode holon. A workbench passes `WebhookModeHolon.Mode()` to
- * `.Modes({ Webhook: ... })`; `Mode` is a factory, so each workbench gets its own builder.
+ * The custom mode, written the way fai's built-in modes are (`APIMode()`, `MCPMode()`,
+ * `WebMode()`): a function that returns a fresh `ModeBuilder` on every call. A workbench passes
+ * `WebhookMode()` to `.Modes({ Webhook: ... })`, so each workbench gets its own builder.
  *
- * The first argument is the descriptor this fai version's `DefineModeHolon` still asks for.
- * OpenX no longer reads it: a mode is a name the package declares, and there is nothing to
- * register in a workspace before deploying.
+ * A mode is a name the package declares: OpenX reads the package's modes when it loads it, and
+ * there is nothing to register in a workspace before deploying.
  */
-export const WebhookModeHolon = DefineModeHolon(
-  {
-    Kind: 'Webhook',
-    ContractVersion: '1.0.0',
-    Entrypoint: 'fai run <Entry> --mode Webhook --config /tmp/mode-config.json',
-    HealthEndpoint: '/health',
-    BuiltIn: false,
-    HolonRef:
-      'https://github.com/fathym/sample-custom-mode-workbench/blob/main/workbenches/webhook/mode-holon.ts',
-  },
-  () =>
-    new ModeBuilder<WebhookModeInput, Bench>(
-      'Webhook',
-      'Receives signed webhooks at POST /webhooks/<hook> and hands each event to a tool.',
-    )
-      .Input(WebhookModeInputSchema)
-      .Execute(async (ctx: any) => {
-        const { Hooks } = ctx.Input as WebhookModeInput;
+export function WebhookMode(): ModeBuilder<WebhookModeInput, Bench> {
+  return new ModeBuilder<WebhookModeInput, Bench>(
+    'Webhook',
+    'Receives signed webhooks at POST /webhooks/<hook> and hands each event to a tool.',
+  )
+    .Input(WebhookModeInputSchema)
+    .Execute(async (ctx: any) => {
+      const { Hooks } = ctx.Input as WebhookModeInput;
 
-        // The port the workbench declared with `.Ports()`. OpenX sets that port's env var
-        // (`PORT` unless the declaration names another) to the same number.
-        const declared = Array.isArray(ctx.Ports)
-          ? (ctx.Ports as ModePort[]).find((p) => p.Primary)
-          : undefined;
-        const port = Number(Deno.env.get(declared?.Env ?? 'PORT') ?? declared?.Port ?? 4970);
+      // The port the workbench declared with `.Ports()`. OpenX sets that port's env var
+      // (`PORT` unless the declaration names another) to the same number.
+      const declared = Array.isArray(ctx.Ports)
+        ? (ctx.Ports as ModePort[]).find((p) => p.Primary)
+        : undefined;
+      const port = Number(Deno.env.get(declared?.Env ?? 'PORT') ?? declared?.Port ?? 4970);
 
-        for (const [name, hook] of Object.entries(Hooks)) {
-          console.log(
-            `[webhook] POST /webhooks/${name} -> ${hook.Tool}.Receive (${
-              hook.SecretEnv ? `signed, secret in ${hook.SecretEnv}` : 'UNSIGNED calls accepted'
-            })`,
-          );
-        }
-
-        const server = Deno.serve(
-          { port, onListen: () => console.log(`[webhook] listening on port ${port}`) },
-          createWebhookHandler(Hooks, ctx.Tools ?? {}),
+      for (const [name, hook] of Object.entries(Hooks)) {
+        console.log(
+          `[webhook] POST /webhooks/${name} -> ${hook.Tool}.Receive (${
+            hook.SecretEnv ? `signed, secret in ${hook.SecretEnv}` : 'UNSIGNED calls accepted'
+          })`,
         );
+      }
 
-        await server.finished;
+      const server = Deno.serve(
+        { port, onListen: () => console.log(`[webhook] listening on port ${port}`) },
+        createWebhookHandler(Hooks, ctx.Tools ?? {}),
+      );
 
-        return {
-          Vaults: {},
-          Close: async () => {
-            await server.shutdown();
-          },
-        } as Bench;
-      }),
-);
+      await server.finished;
+
+      return {
+        Vaults: {},
+        Close: async () => {
+          await server.shutdown();
+        },
+      } as Bench;
+    });
+}
