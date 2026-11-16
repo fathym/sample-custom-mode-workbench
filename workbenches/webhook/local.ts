@@ -7,8 +7,9 @@
  * ## What this sample demonstrates
  *
  * A custom mode: a way of serving a workbench that OpenX does not ship (it ships MCP, API and
- * Web). [./mode-holon.ts](./mode-holon.ts) defines it with `DefineModeHolon`; this file is a
- * workbench that offers it, with one tool that receives the events:
+ * Web). [./mode-holon.ts](./mode-holon.ts) defines it as `WebhookMode()`, a function that returns
+ * a `ModeBuilder` the way the built-in `APIMode()` does; this file is a workbench that offers it,
+ * with one tool that receives the events:
  *
  * - `POST /webhooks/github` — a signed GitHub delivery, handed to `GitHubEvents.Receive`.
  * - `GET  /health`          — OpenX's readiness check.
@@ -18,7 +19,7 @@
 import { Workbench, type WorkbenchBuilder } from '@fathym/fai/workbenches';
 import { Tool } from '@fathym/fai/tools';
 import { z } from 'zod';
-import { type WebhookEvent, WebhookModeHolon } from './mode-holon.ts';
+import { type WebhookEvent, WebhookMode } from './mode-holon.ts';
 
 /** The tool the `github` hook hands its events to. It logs one line per event. */
 const GitHubEventsTool = Tool(
@@ -52,12 +53,12 @@ const GitHubEventsTool = Tool(
 // signed with the secret in GITHUB_WEBHOOK_SECRET.
 const workbench: WorkbenchBuilder = Workbench(
   'webhook-sample',
-  'Sample workbench demonstrating a custom Webhook mode via DefineModeHolon.',
+  'Sample workbench demonstrating a custom Webhook mode.',
 )
   .Tools({ GitHubEvents: GitHubEventsTool })
   .Modes({
     // Webhook serves `/webhooks/<hook>` and `/health` on 4970: the port OpenX routes to.
-    Webhook: WebhookModeHolon.Mode().Ports(4970),
+    Webhook: WebhookMode().Ports(4970),
   });
 
 export default workbench;

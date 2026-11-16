@@ -1,6 +1,6 @@
 # @fathym/sample-custom-mode-workbench
 
-Sample workbench demonstrating a **custom mode** authored with `DefineModeHolon`: a **Webhook** mode that receives signed webhooks and hands each event to a workbench tool. Published to JSR as [`@fathym/sample-custom-mode-workbench`](https://jsr.io/@fathym/sample-custom-mode-workbench).
+Sample workbench demonstrating a **custom mode**: a **Webhook** mode that receives signed webhooks and hands each event to a workbench tool. Published to JSR as [`@fathym/sample-custom-mode-workbench`](https://jsr.io/@fathym/sample-custom-mode-workbench).
 
 Sibling to [`sample-api-workbench`](https://github.com/fathym/sample-api-workbench) (API mode), [`sample-ui-workbench`](https://github.com/fathym/sample-ui-workbench) (Web mode + Consumes), and [`hello-workbench`](https://github.com/fathym-deno/hello-workbench) (MCP mode).
 
@@ -16,8 +16,8 @@ An earlier version of this sample had a scheduled mode that logged a tick every 
 
 ## What it demonstrates
 
-1. **`DefineModeHolon`** — [`workbenches/webhook/mode-holon.ts`](./workbenches/webhook/mode-holon.ts) defines the `Webhook` mode once; `WebhookModeHolon.Mode()` hands any workbench a fresh `ModeBuilder` for it.
-2. **A workbench offering it** — [`workbenches/webhook/local.ts`](./workbenches/webhook/local.ts) declares `.Modes({ Webhook: WebhookModeHolon.Mode().Ports(4970) })` and one tool, `GitHubEvents`, that receives the events.
+1. **A mode is a function** — [`workbenches/webhook/mode-holon.ts`](./workbenches/webhook/mode-holon.ts) defines the `Webhook` mode as `WebhookMode()`, a function that returns a fresh `ModeBuilder` on every call, exactly the way fai's built-in `APIMode()`, `MCPMode()` and `WebMode()` are written.
+2. **A workbench offering it** — [`workbenches/webhook/local.ts`](./workbenches/webhook/local.ts) declares `.Modes({ Webhook: WebhookMode().Ports(4970) })` and one tool, `GitHubEvents`, that receives the events.
 3. **Signature checks** — every call to a hook that names a secret must carry `X-Hub-Signature-256`, the HMAC-SHA256 of the raw body, as GitHub sends it.
 
 There is nothing to register in the workspace first. A mode is a name the package declares: OpenX reads the package's modes when you load it, and deploys any mode it declares.
@@ -135,7 +135,7 @@ curl -i http://localhost:4970/health
    The container's logs show the two `[webhook]` start lines above.
 3. Point the sender at `{that address}/webhooks/github`. In GitHub: the repo's **Settings → Webhooks → Add webhook**, Payload URL as above, Content type `application/json`, Secret the same value as `GITHUB_WEBHOOK_SECRET`.
 
-**Who can reach it.** The workspace's door signs callers in with OpenX before it forwards them, and a webhook sender has no OpenX sign-in. For GitHub to reach the mode, the workspace owner detaches this endpoint from the workspace's sign-in (the workspace API settings' endpoint identity: this workbench, mode `Webhook`, `detached`). A detached endpoint signs its own callers in, which is what the signature check does. While the endpoint is still linked, you can send the test webhook above to the address with your own OpenX bearer token added: the door checks the token, removes it, and the mode still checks the signature.
+**Who can reach it.** The workbench checks its own callers. OpenX checks no caller in front of it: it forwards every call to the mode, and the mode decides. So GitHub reaches the deployed mode as it is, and the signature check is what lets a delivery in or turns it away. A webhook sender holds no sign-in, so set **Who may call this mode** to **None** for `Webhook`: the mode needs no login settings. How a mode that does sign callers in checks them: [Add Sign-in to Your Workbench](https://www.fathym.com/docs/openx/guides/workbenches/sign-in).
 
 ## Related
 
