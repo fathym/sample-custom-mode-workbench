@@ -129,13 +129,14 @@ curl -i http://localhost:4970/health
 2. Save, then Deploy. Once `HostingStatus` is `Running`, the Hosting tab shows the mode's address:
 
    ```
-   Webhook: {workspace-origin}/ox-api/w/{workspace}/workbenches/webhook-sample/Webhook
+   Webhook: https://{mode address}
    ```
 
-   The container's logs show the two `[webhook]` start lines above.
+   `{mode address}` is the mode's own Azure address, the one Deploy gave its container. The container's logs show
+   the two `[webhook]` start lines above.
 3. Point the sender at `{that address}/webhooks/github`. In GitHub: the repo's **Settings → Webhooks → Add webhook**, Payload URL as above, Content type `application/json`, Secret the same value as `GITHUB_WEBHOOK_SECRET`.
 
-**Who can reach it.** The workbench checks its own callers. OpenX checks no caller in front of it: it forwards every call to the mode, and the mode decides. So GitHub reaches the deployed mode as it is, and the signature check is what lets a delivery in or turns it away. A webhook sender holds no sign-in, so set **Who may call this mode** to **None** for `Webhook`: the mode needs no login settings. How a mode that does sign callers in checks them: [Add Sign-in to Your Workbench](https://www.fathym.com/docs/openx/guides/workbenches/sign-in).
+**Who can reach it.** The workbench checks its own callers. OpenX checks no caller in front of it: every call reaches the mode at its own address, and the mode decides. So GitHub reaches the deployed mode as it is, and the signature check is what lets a delivery in or turns it away. A webhook sender holds no sign-in, so set **Who may call this mode** to **None** for `Webhook`: the mode needs no login settings. How a mode that does sign callers in checks them: [Add Sign-in to Your Workbench](https://www.fathym.com/docs/openx/guides/workbenches/sign-in).
 
 ## Related
 
